@@ -1,6 +1,6 @@
 # Lufthansa Group Manager · Operations Edition
 
-Ein lokaler Airline-Manager für die Lufthansa Group. `index.html` in einem aktuellen Browser öffnen oder den Ordner über einen lokalen HTTP-Server bereitstellen. Es sind keine Installation, Anmeldung, Internetverbindung oder Serverdatenbank erforderlich. Alle Grafiken, Icons und Kartendaten sind lokal enthalten. Es gibt keine Premiumwährung, Werbung, bezahlten Vorteile oder käuflichen Zeitbeschleuniger.
+Ein lokaler Airline-Manager für die Lufthansa Group. `index.html` in einem aktuellen Browser öffnen oder den Ordner über einen lokalen HTTP-Server bereitstellen. Es sind keine Installation, Anmeldung, Internetverbindung oder Serverdatenbank erforderlich. Basisgrafiken, Icons und Kartendaten sind lokal enthalten. Original-Flugzeugabbildungen werden optional von den offiziellen Airline-Seiten geladen; offline bleiben die lokalen Ersatzgrafiken verfügbar. Es gibt keine Premiumwährung, Werbung, bezahlten Vorteile oder käuflichen Zeitbeschleuniger.
 
 ## Neu in der Operations Edition
 
@@ -113,3 +113,9 @@ Die Mechaniken sind eigenständig umgesetzt. Referenzen für die Gestaltung von 
 - [Munich Airport: Nachtflugregelung](https://www.munich-airport.com/night-flight-264466)
 - [Zürich: Nachtflugordnung und Verspätungsabbau](https://www.zh.ch/de/mobilitaet/luftverkehr/flughafenpolitik/flugbetrieb-umwelt.html)
 - [Natural Earth: Public-Domain-Kartendaten](https://www.naturalearthdata.com/about/terms-of-use/), lokal abgeleitet aus `ne_110m_land.geojson`.
+
+## Flugzeugabbildungen
+
+Die Flottenkarten verwenden typ- und betreiberspezifische Originalabbildungen von den offiziellen Flottenseiten der Lufthansa Group und ihrer Airlines. Der Katalog in `assets/fleet-images.js` enthält geprüfte Bild- und Quellenadressen; alle 20 Airline/Muster-Kombinationen des neuen Startbestands haben eine eigene Zuordnung. Ein Quellenlink steht an jeder Abbildung. Die Abbildungen sind Eigentum der jeweiligen Rechteinhaber; es wird keine freie Bildlizenz behauptet.
+
+Die Originalbilder werden direkt vom jeweiligen Anbieter geladen und benötigen Internetzugang. Ohne Verbindung, bei blockierten Bildadressen oder entfernten Bildern erscheint eine klar bezeichnete lokale Symbolabbildung. Bei später angeschafften Kombinationen ohne Originalbild wird eine Typreferenz eines anderen Group-Betreibers ausdrücklich als solche bezeichnet; ohne Typreferenz bleibt die Symbolabbildung erhalten. Bilder werden verzögert geladen und vollständig eingepasst, damit Flügel und Leitwerk nicht abgeschnitten werden.

@@ -50,6 +50,17 @@ const { chromium } = require("playwright"),
     page = await context.newPage(),
     errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
+  // Image availability is controlled in this test; sources are verified separately.
+  await page.route(
+    /^https:\/\/www\.(lufthansagroup|lufthansa|austrian|brusselsairlines|discover-airlines)\.com\/(media|content)\//,
+    (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "image/svg+xml",
+        body: '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="480"><rect width="1200" height="480" fill="#f3f6fb"/><path d="M100 260H1100L1000 210H200Z" fill="#12315b"/></svg>',
+      }),
+  );
+
   const fixed = new Date("2026-11-16T12:00:00Z");
   await page.clock.install({ time: fixed });
   await page.clock.pauseAt(fixed);
@@ -110,6 +121,37 @@ const { chromium } = require("playwright"),
     assert(!text.includes("NaN"));
     assert(!text.includes("undefined"));
   }
+  await nav("Flotte & Technik").click();
+  assert(
+    await page.evaluate(() =>
+      s.fleet.every((f) => AIRCRAFT_IMAGES[`${f.air}-${f.type}`]),
+    ),
+    "Every starting aircraft needs an airline/type image",
+  );
+  const image = page.locator("img[data-aircraft-image]").first();
+  await image.scrollIntoViewIfNeeded();
+  await image.evaluate((el) => el.decode());
+  assert(
+    await image.evaluate(
+      (el) =>
+        el.naturalWidth > 0 && getComputedStyle(el).objectFit === "contain",
+    ),
+  );
+  assert((await image.getAttribute("alt")).includes("Lufthansa"));
+  assert(
+    await page
+      .locator(".fleet-image figcaption a")
+      .first()
+      .getAttribute("href"),
+  );
+  await image.dispatchEvent("error");
+  assert((await image.getAttribute("src")).startsWith("assets/aircraft-"));
+  assert(
+    (await page.locator(".fleet-image-label").first().innerText()).includes(
+      "Symbolabbildung",
+    ),
+  );
+  await nav("Operations Center").click();
   // New route: live estimates, range rejection, actual creation and booking fee.
   await nav("Strecke planen").click();
   await page.locator('[name="to"]').selectOption("LAX");

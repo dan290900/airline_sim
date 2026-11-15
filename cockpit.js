@@ -390,6 +390,44 @@ function aircraftDetails(f) {
     })
     .join("")}</tbody></table></div></details>`;
 }
+const failedFleetImages = new Set();
+function fleetImage(f) {
+  const exact = AIRCRAFT_IMAGES[`${f.air}-${f.type}`];
+  const reference =
+    exact ||
+    Object.values(AIRCRAFT_IMAGES).find((image) => image.type === f.type);
+  const fallback = `assets/aircraft-${f.air.toLowerCase()}.svg`;
+  const unavailable = !reference || failedFleetImages.has(reference.image);
+  const label = exact
+    ? `${brands[f.air].name} · ${types[f.type][0]}`
+    : reference
+      ? `${types[f.type][0]} · Typreferenz ${brands[reference.air].name}`
+      : `${types[f.type][0]} · Symbolabbildung`;
+  return `<figure class="fleet-image ${unavailable ? "is-fallback" : ""}"><div class="fleet-image-frame"><img class="aircraft-image" src="${esc(unavailable ? fallback : reference.image)}" alt="${esc(unavailable ? "Schematische Ersatzabbildung für " + types[f.type][0] : label)}" width="1200" height="480" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-aircraft-image data-fallback="${fallback}" data-original="${esc(reference?.image || "")}"></div><figcaption><span class="fleet-image-label">${unavailable ? "Symbolabbildung · Originalbild nicht verfügbar" : exact ? "Originalabbildung · " + brands[f.air].name : "Typreferenz · " + brands[reference.air].name}</span>${reference ? `<a href="${esc(reference.source)}" target="_blank" rel="noopener noreferrer" aria-label="Bildquelle für ${esc(types[f.type][0])} bei ${esc(brands[reference.air].name)} öffnen">Bildquelle ↗</a>` : ""}</figcaption></figure>`;
+}
+// A blocked or unavailable external asset must never break fleet management.
+app.addEventListener(
+  "error",
+  (event) => {
+    const image = event.target;
+    if (
+      !image.matches?.("img[data-aircraft-image]") ||
+      image.dataset.fallbackApplied
+    )
+      return;
+    image.dataset.fallbackApplied = "true";
+    if (image.dataset.original) failedFleetImages.add(image.dataset.original);
+    image.src = image.dataset.fallback;
+    image.alt =
+      "Schematische Ersatzabbildung; Originalbild derzeit nicht verfügbar";
+    const figure = image.closest(".fleet-image");
+    figure?.classList.add("is-fallback");
+    const label = figure?.querySelector(".fleet-image-label");
+    if (label)
+      label.textContent = "Symbolabbildung · Originalbild nicht verfügbar";
+  },
+  true,
+);
 function fleetCards() {
   const fleet = s.fleet.filter(
     (f) =>
@@ -405,7 +443,7 @@ function fleetCards() {
           const available = free(f.air, f.type),
             t = types[f.type],
             tech = f.maintenanceUntil > gameNow();
-          return `<article class="fleet-card"><div class="fleet-card-top"><div>${airlineMark(f.air)}<span><small>${brands[f.air].name}</small><h3>${t[0]}</h3></span></div>${badge(tech ? "Technik-Check" : f.maintenancePending ? "Check geplant" : "Im Bestand", tech || f.maintenancePending ? "amber" : "neutral")}</div><div class="fleet-silhouette"><img src="assets/aircraft-${f.air.toLowerCase()}.svg" alt=""><span>${t[1]} PAX · ${num(t[2])} KM</span></div><div class="fleet-data"><div><strong>${f.count}</strong><small>im Bestand</small></div><div><strong>${available}</strong><small>frei</small></div><div><strong class="${f.condition < 75 ? "negative" : ""}">${pct(f.condition / 100)}</strong><small>Zustand</small></div></div><div class="condition-track"><i style="width:${f.condition}%"></i></div><div class="fleet-card-actions"><span>${tech ? "Freigabe " + timeLabel(f.maintenanceUntil) + " UTC" : "4 Std. Technik-Standzeit"}</span><button class="text-button" data-maintain="${f.id}" ${tech || f.maintenancePending ? "disabled" : ""}>Check · ca. ${compact(Math.ceil((100 - f.condition) * f.count * 2200))} →</button></div>${aircraftDetails(f)}</article>`;
+          return `<article class="fleet-card"><div class="fleet-card-top"><div>${airlineMark(f.air)}<span><small>${brands[f.air].name}</small><h3>${t[0]}</h3></span></div>${badge(tech ? "Technik-Check" : f.maintenancePending ? "Check geplant" : "Im Bestand", tech || f.maintenancePending ? "amber" : "neutral")}</div>${fleetImage(f)}<div class="fleet-aircraft-spec">${t[1]} PAX <span>·</span> ${num(t[2])} KM REICHWEITE</div><div class="fleet-data"><div><strong>${f.count}</strong><small>im Bestand</small></div><div><strong>${available}</strong><small>frei</small></div><div><strong class="${f.condition < 75 ? "negative" : ""}">${pct(f.condition / 100)}</strong><small>Zustand</small></div></div><div class="condition-track"><i style="width:${f.condition}%"></i></div><div class="fleet-card-actions"><span>${tech ? "Freigabe " + timeLabel(f.maintenanceUntil) + " UTC" : "4 Std. Technik-Standzeit"}</span><button class="text-button" data-maintain="${f.id}" ${tech || f.maintenancePending ? "disabled" : ""}>Check · ca. ${compact(Math.ceil((100 - f.condition) * f.count * 2200))} →</button></div>${aircraftDetails(f)}</article>`;
         })
         .join("")
     : '<div class="empty">Keine passenden Flugzeuge.</div>';
