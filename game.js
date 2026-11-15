@@ -1,24 +1,1134 @@
-const KEY='lufthansa-manager-v2';
-const airports=[['FRA','Frankfurt',50.04,8.56],['MUC','München',48.35,11.79],['ZRH','Zürich',47.46,8.55],['VIE','Wien',48.11,16.57],['LHR','London',51.47,-.45],['CDG','Paris',49.01,2.55],['AMS','Amsterdam',52.31,4.76],['MAD','Madrid',40.47,-3.56],['FCO','Rom',41.8,12.25],['BER','Berlin',52.37,13.5],['HAM','Hamburg',53.63,10],['BCN','Barcelona',41.3,2.08],['ATH','Athen',37.94,23.94],['IST','Istanbul',41.26,28.74],['JFK','New York',40.64,-73.78],['EWR','Newark',40.69,-74.17],['LAX','Los Angeles',33.94,-118.41],['SFO','San Francisco',37.62,-122.38],['ORD','Chicago',41.98,-87.9],['MIA','Miami',25.79,-80.29],['BOS','Boston',42.36,-71],['YYZ','Toronto',43.68,-79.63],['GRU','São Paulo',-23.43,-46.47],['MEX','Mexiko-Stadt',19.44,-99.07],['DXB','Dubai',25.25,55.36],['DEL','Neu-Delhi',28.56,77.1],['BOM','Mumbai',19.09,72.87],['HND','Tokio',35.55,139.78],['PVG','Shanghai',31.14,121.81],['PEK','Peking',40.08,116.59],['SIN','Singapur',1.36,103.99],['BKK','Bangkok',13.69,100.75],['JNB','Johannesburg',-26.14,28.25],['CPT','Kapstadt',-33.97,18.6],['CAI','Kairo',30.12,31.41],['LIS','Lissabon',38.77,-9.13],['OSL','Oslo',60.19,11.1],['ARN','Stockholm',59.65,17.92],['PRG','Prag',50.1,14.26],['BUD','Budapest',47.44,19.26]];
-const types=[['Airbus A319-100',138,6900,830,55,2400],['Airbus A320-200',180,6100,830,65,2600],['Airbus A320neo',180,6300,830,85,2200],['Airbus A321-200',200,5900,830,80,3100],['Airbus A321neo',215,7400,830,105,2600],['Airbus A220-300',145,6300,820,75,1900],['Embraer E195',120,4200,800,48,1700],['Airbus A330-300',255,11750,870,155,5700],['Airbus A340-300',279,13000,880,135,7200],['Airbus A340-600',297,14000,880,180,9000],['Airbus A350-900',293,15000,900,240,5600],['Boeing 747-400',371,13450,900,210,10500],['Boeing 747-8',364,14320,900,300,9500],['Boeing 777-300ER',340,13650,900,270,8000],['Boeing 787-9',294,14100,900,230,5600],['Airbus A380-800',509,14800,900,350,12000],['Boeing 777-200ER',306,13000,890,150,7800],['Boeing 737 MAX 8',189,6500,840,100,2400]];
-const brands={LH:{name:'Lufthansa',hub:'FRA',color:'#f4c84c'},LX:{name:'SWISS',hub:'ZRH',color:'#f57474'},OS:{name:'Austrian Airlines',hub:'VIE',color:'#f3a0a0'}};
-const competitors=[['Delta Air Lines','USA','~1.000','~100.000'],['United Airlines','USA','~1.000','~110.000'],['American Airlines','USA','~1.000','~130.000'],['Emirates','VAE','~260','~60.000'],['Air France','Frankreich','229','~37.000'],['KLM','Niederlande','122','~35.000'],['British Airways','Großbritannien','~280','~35.000'],['Turkish Airlines','Türkei','~450','~50.000'],['Qatar Airways','Katar','~250','~50.000'],['Ryanair','Irland','~600','~28.000']];
-const money=n=>new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n),num=n=>Math.round(n).toLocaleString('de-DE'),ap=c=>airports.find(a=>a[0]===c),esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function km(a,b){let r=Math.PI/180,d=(b[2]-a[2])*r,e=(b[3]-a[3])*r;return Math.round(12742*Math.asin(Math.sqrt(Math.sin(d/2)**2+Math.cos(a[2]*r)*Math.cos(b[2]*r)*Math.sin(e/2)**2)))}
-function base(){let fleet=[];function add(air,type,count){fleet.push({id:fleet.length+1,air,type,count,condition:94})}[[0,35],[1,55],[2,32],[3,40],[4,20],[7,15],[8,17],[9,10],[10,30],[11,8],[12,19],[14,10],[15,8]].forEach(x=>add('LH',...x));[[5,30],[1,15],[4,9],[7,14],[13,12]].forEach(x=>add('LX',...x));[[6,17],[1,29],[4,5],[16,6],[14,2]].forEach(x=>add('OS',...x));let routes=[],id=1;function seed(air,from,to,type,count){let dist=km(ap(from),ap(to)),duration=Math.max(1800000,dist/types[type][3]*3600000);routes.push({id:id++,air,from,to,type,count,price:Math.round(Math.max(115,dist*.16)),next:Date.now()+duration,duration})}let short=['LHR','CDG','AMS','MAD','FCO','BER','HAM','BCN','ATH','IST','LIS','OSL','ARN','PRG','BUD'];short.forEach((x,i)=>seed('LH',i%3===0?'MUC':'FRA',x,i%2?1:2,3));['JFK','EWR','LAX','SFO','ORD','MIA','BOS','YYZ','GRU','MEX','DXB','DEL','BOM','HND','PVG','PEK','SIN','BKK','JNB','CPT','CAI'].forEach((x,i)=>seed('LH',i%4===0?'MUC':'FRA',x,[10,12,14,7][i%4],2));['LHR','CDG','BER','BCN','FCO','AMS','MAD','ATH'].forEach((x,i)=>seed('LX','ZRH',x,i%2?5:1,2));['JFK','LAX','SFO','ORD','MIA','DXB','DEL','HND','PVG','SIN','BKK','JNB'].forEach((x,i)=>seed('LX','ZRH',x,i%2?13:7,1));['FRA','LHR','CDG','BER','AMS','FCO','ATH','IST','PRG','BUD'].forEach((x,i)=>seed('OS','VIE',x,i%2?6:1,1));['JFK','ORD','BKK','HND','DEL','EWR'].forEach((x,i)=>seed('OS','VIE',x,i%3===0?14:16,1));return {version:2,cash:3500000000,fuel:130000000,staff:103255,fleet,routes,orders:[],completed:0,profit:0,last:Date.now(),log:['Die Lufthansa Group ist bereit für deinen ersten Arbeitstag.'],nextId:id}}
-let s;try{s=JSON.parse(localStorage.getItem(KEY))||base();if(s.version!==2)s=base()}catch{s=base()}let page='dashboard',notice='',filter='all';const app=document.querySelector('#app');function save(){localStorage.setItem(KEY,JSON.stringify(s))}function log(t){s.log.unshift(t);s.log=s.log.slice(0,20)}function free(air,type){let f=s.fleet.find(x=>x.air===air&&x.type===type);return (f?.count||0)-s.routes.filter(r=>r.air===air&&r.type===type).reduce((n,r)=>n+r.count,0)}function info(r){let t=types[r.type],d=km(ap(r.from),ap(r.to)),hours=r.duration/3600000,load=Math.max(.35,Math.min(.91,.86-(r.price/Math.max(130,d*.17)-.75)*.2)),pax=Math.floor(t[1]*load),fuel=Math.round(t[5]*hours),other=Math.round(4500+hours*t[1]*11);return {d,hours,pax,fuel,other,rev:pax*r.price,net:pax*r.price-other-fuel*.85}}
-function sync(){let now=Date.now();if(now<s.last){s.last=now;save();return}let flights=0,missed=0,profit=0;for(let r of s.routes){if(r.next>now)continue;let n=(Math.floor((now-r.next)/r.duration)+1)*r.count;r.next+=(n/r.count)*r.duration;let f=s.fleet.find(x=>x.air===r.air&&x.type===r.type),v=info(r),possible=f&&f.condition>20?Math.min(n,Math.floor(s.fuel/v.fuel)):0;s.fuel-=possible*v.fuel;let result=possible*(v.rev-v.other);s.cash+=result;profit+=result;flights+=possible;missed+=n-possible;if(f)f.condition=Math.max(20,f.condition-possible*v.hours/(f.count*3500));}let ready=s.orders.filter(o=>o.at<=now);for(let o of ready){let f=s.fleet.find(x=>x.air===o.air&&x.type===o.type);if(f)f.count+=o.count;else s.fleet.push({id:Date.now()+Math.random(),air:o.air,type:o.type,count:o.count,condition:100});log(`${o.count} × ${types[o.type][0]} an ${brands[o.air].name} ausgeliefert.`)}s.orders=s.orders.filter(o=>o.at>now);let wages=(now-s.last)/86400000*s.staff*110;s.cash-=wages;s.last=now;s.completed+=flights;s.profit+=profit-wages;if(flights)log(`${num(flights)} Flüge abgeschlossen; ${money(profit)} operativer Beitrag vor Gehältern.`);if(missed)log(`${num(missed)} Flüge ausgefallen: Kerosin oder Wartung fehlte.`);save()}
-const duration=ms=>{let m=Math.max(0,Math.ceil(ms/60000));return `${Math.floor(m/60)}h ${String(m%60).padStart(2,'0')}m`};
-function world(){let xy=a=>[(a[3]+180)*2.5,(90-a[2])*2.5];let routes=s.routes.filter(r=>filter==='all'||r.air===filter);return `<div class="map-wrap"><svg class="map" viewBox="0 0 900 450" role="img" aria-label="Weltkarte mit Streckennetz"><defs><pattern id="grid" width="75" height="75" patternUnits="userSpaceOnUse"><path d="M75 0H0V75" fill="none" stroke="#243d49" stroke-width=".7"/></pattern><radialGradient id="sea"><stop stop-color="#193748"/><stop offset="1" stop-color="#0b1a27"/></radialGradient></defs><rect width="900" height="450" fill="url(#sea)"/><rect width="900" height="450" fill="url(#grid)"/><g class="land"><path d="M35 76L85 44 146 51 170 70 210 75 230 105 211 126 187 128 172 156 150 158 139 188 110 171 96 143 61 128 45 106Z M165 190L202 201 224 239 220 278 203 309 190 353 174 329 169 291 151 255 151 219Z M358 75L395 60 426 73 448 66 466 79 490 72 508 91 481 103 462 116 440 105 421 120 391 111 375 100Z M390 132L433 120 466 142 480 179 463 219 442 255 418 250 405 216 386 190 374 156Z M482 80L531 59 598 57 628 70 690 67 734 82 786 90 813 115 789 134 754 128 726 148 697 140 680 164 650 159 637 183 610 170 595 143 565 145 545 125 510 127 487 111Z M663 188L689 194 707 214 724 218 742 232 728 242 702 226 681 223Z M739 275L774 262 810 276 827 301 810 320 776 321 750 307 733 292Z M286 37L310 23 333 31 325 57 300 68 285 57Z"/></g>${routes.map(r=>{let a=xy(ap(r.from)),b=xy(ap(r.to)),mid=(a[0]+b[0])/2,up=Math.min(a[1],b[1])-Math.abs(a[0]-b[0])*.16;return `<path d="M${a} Q${mid} ${up} ${b}" fill="none" stroke="${brands[r.air].color}" stroke-width=".9" opacity=".5"/>`}).join('')}${[...new Set(routes.flatMap(r=>[r.from,r.to]))].map(c=>{let p=xy(ap(c));return `<circle cx="${p[0]}" cy="${p[1]}" r="3.5"/><text x="${p[0]+5}" y="${p[1]-5}">${c}</text>`}).join('')}</svg><div class="map-label">GLOBAL NETWORK <span>● LIVE</span></div></div>`}
-function routeTable(list){return `<div class="tablewrap"><table><thead><tr><th>AIRLINE / ROUTE</th><th>FLUGZEUG</th><th>KAPAZITÄT</th><th>TICKET</th><th>FLUGZEIT</th><th>STATUS</th><th></th></tr></thead><tbody>${list.map(r=>{let v=info(r);return `<tr><td><b>${r.from} → ${r.to}</b><small>${brands[r.air].name} · ${ap(r.to)[1]}</small></td><td>${types[r.type][0]}</td><td>${r.count} Flugzeuge</td><td>${money(r.price)}</td><td>${duration(r.duration)}</td><td><span class="tag">${duration(r.next-Date.now())} bis Ankunft</span></td><td><button class="link" data-close="${r.id}">Schließen</button></td></tr>`}).join('')}</tbody></table></div>`}
-function dashboard(){let assigned=s.routes.reduce((n,r)=>n+r.count,0),fleet=s.fleet.reduce((n,f)=>n+f.count,0);return `<div class="layout"><div><section class="panel"><div class="panel-head"><div><div class="eyebrow">FLIGHT OPERATIONS</div><h2>Das Netzwerk der Gruppe</h2><p class="sub">Drei Airlines. Ein globales Streckennetz.</p></div><select id="filter" class="compact"><option value="all">Alle Airlines</option>${Object.entries(brands).map(([k,v])=>`<option value="${k}" ${filter===k?'selected':''}>${v.name}</option>`).join('')}</select></div>${world()}<div class="legend"><span style="color:#f4c84c">● Lufthansa</span><span style="color:#f57474">● SWISS</span><span style="color:#f3a0a0">● Austrian</span><span>Linien zeigen modellierte Verbindungen</span></div></section><section class="panel section"><div class="panel-head"><div><div class="eyebrow">GROUP PORTFOLIO</div><h2>Unsere Airlines</h2></div><button class="secondary" data-page="routes">Netzwerk ansehen →</button></div><div class="brand-grid">${Object.entries(brands).map(([k,v])=>`<div class="brand-card"><div class="air-logo ${k}">${k}</div><strong>${v.name}</strong><small>Hub ${v.hub} · ${s.fleet.filter(f=>f.air===k).reduce((n,f)=>n+f.count,0)} Flugzeuge</small><small>${s.routes.filter(r=>r.air===k).length} modellierte Strecken</small></div>`).join('')}</div></section></div><div><section class="panel"><div class="eyebrow">HEUTE IM BLICK</div><h2 style="margin-top:8px">Operations</h2><div class="row"><div><strong>Flotteneinsatz</strong><small>Auf Strecken eingeplant</small></div><b>${assigned} / ${fleet}</b></div><div class="row"><div><strong>Kerosinreserve</strong><small>Konzerntank</small></div><b>${num(s.fuel/1e6)} Mio. l</b></div><div class="row"><div><strong>Offene Bestellungen</strong><small>Auslieferung in 2–3 Stunden</small></div><b>${s.orders.reduce((n,o)=>n+o.count,0)}</b></div><button class="action wide section" data-page="new">+ Neue Strecke planen</button></section><section class="panel section"><div class="eyebrow">BETRIEBSTAGEBUCH</div><h2 style="margin-top:8px">Letzte Ereignisse</h2>${s.log.slice(0,6).map(l=>`<div class="row"><small>${esc(l)}</small></div>`).join('')}</section></div></div>`}
-function fleetPage(){return `<section class="panel"><div class="panel-head"><div><div class="eyebrow">FLEET CONTROL</div><h2>Flotte & Wartung</h2><p class="sub">Flugzeuge werden nach Airline und Muster verwaltet. Unter 20 % Zustand fallen Flüge aus.</p></div></div><div class="tablewrap"><table><thead><tr><th>AIRLINE / MUSTER</th><th>FLOTTE</th><th>FREI</th><th>ZUSTAND</th><th>REICHWEITE</th><th>WARTUNG</th></tr></thead><tbody>${s.fleet.map(f=>`<tr><td><b>${types[f.type][0]}</b><small>${brands[f.air].name}</small></td><td>${f.count}</td><td>${free(f.air,f.type)}</td><td><span class="${f.condition<40?'warn':''}">${Math.round(f.condition)} %</span></td><td>${num(types[f.type][2])} km</td><td><button class="secondary" data-maintain="${f.id}">Warten · ${money(Math.ceil((100-f.condition)*f.count*4500))}</button></td></tr>`).join('')}</tbody></table></div></section><section class="panel section"><div class="eyebrow">FLEET PROCUREMENT</div><h2>Flugzeuge bestellen</h2><p class="sub">Bezahlung sofort, Lieferung nach 2 bis 3 Stunden. Preise und Lieferzeiten sind Spielwerte.</p><form id="orderForm" class="inline-form section"><label>AIRLINE<select name="air">${Object.entries(brands).map(([k,v])=>`<option value="${k}">${v.name}</option>`).join('')}</select></label><label>FLUGZEUGTYP<select name="type">${types.map((t,i)=>`<option value="${i}">${t[0]} · ${t[4]} Mio. €</option>`).join('')}</select></label><label>ANZAHL<input name="count" type="number" min="1" max="20" value="1"></label><button class="action">Bestellen</button></form><div class="section">${s.orders.length?s.orders.map(o=>`<div class="row"><strong>${o.count} × ${types[o.type][0]} · ${brands[o.air].name}</strong><span class="tag">Lieferung in ${duration(o.at-Date.now())}</span></div>`).join(''):'<p class="sub">Keine offenen Bestellungen.</p>'}</div></section>`}
-function newRoute(){return `<section class="panel"><h2>Neue Verbindung planen</h2><p class="sub">Verfügbare Flugzeuge werden der Strecke zugeteilt und fliegen sie wiederholt.</p><form id="routeForm" class="form section"><label>AIRLINE<select name="air">${Object.entries(brands).map(([k,v])=>`<option value="${k}">${v.name}</option>`).join('')}</select></label><label>ABFLUG<select name="from">${airports.map(a=>`<option>${a[0]}</option>`).join('')}</select></label><label>ZIEL<select name="to">${airports.map((a,i)=>`<option ${i===4?'selected':''}>${a[0]}</option>`).join('')}</select></label><label>FLUGZEUGTYP<select name="type">${types.map((t,i)=>`<option value="${i}">${t[0]}</option>`).join('')}</select></label><label>ANZAHL FLUGZEUGE<input name="count" type="number" min="1" max="100" value="1"></label><label>TICKETPREIS (€)<input name="price" type="number" min="30" max="5000" value="180"></label><div id="estimate" class="notice"></div><button class="action">Strecke eröffnen →</button></form></section>`}
-function estimate(){let f=document.querySelector('#routeForm');if(!f)return;let d=new FormData(f),a=ap(d.get('from')),b=ap(d.get('to')),type=+d.get('type'),count=+d.get('count'),price=+d.get('price'),dist=km(a,b),duration=Math.max(1800000,dist/types[type][3]*3600000),r={type,price,from:a[0],to:b[0],duration},v=info(r),error=!dist||dist>types[type][2]||count<1||count>free(d.get('air'),type);document.querySelector('#estimate').textContent=error?`Bitte Strecke, Reichweite und verfügbare Flugzeuge prüfen. Frei: ${free(d.get('air'),type)} · Reichweite: ${num(types[type][2])} km.`:`${num(dist)} km · ${durationText(duration)} · ca. ${v.pax} Passagiere · ${num(v.fuel)} l Kerosin · kalkulatorisch ${money(v.net)} pro Flug (inkl. Kerosin zu 0,85 €/l).`;return !error?{...r,air:d.get('air'),count}:null}const durationText=duration;
-function fuelPage(){return `<section class="panel"><div class="eyebrow">FUEL MANAGEMENT</div><h2>Kerosin & Betrieb</h2><div class="fuel-hero"><div><small>AKTUELLER TANKBESTAND</small><strong>${num(s.fuel)} <em>Liter</em></strong><p class="sub">Kerosin wird bei abgeschlossenen Flügen automatisch verbraucht. Bei leerem Tank fallen Flüge aus.</p></div><div class="fuel-icon">◒</div></div><form id="fuelForm" class="inline-form"><label>KEROSIN KAUFEN (LITER)<input type="number" name="liters" min="1000" step="1000" value="10000000"></label><div><small class="muted">FESTER SPIELPREIS</small><p>0,85 € / Liter</p></div><button class="action">Kerosin kaufen</button></form></section><section class="panel section"><h2>Personal & Kosten</h2><div class="row"><div><strong>${num(s.staff)} Mitarbeitende</strong><small>Gesamtkonzern; auch nicht spielbare Konzerngesellschaften enthalten.</small></div><b>${money(s.staff*110)} / Tag</b></div><p class="footer-note">Personalkosten werden kontinuierlich anhand der verstrichenen realen Zeit abgerechnet. Spielwerte sind vereinfacht und keine Finanzprognose.</p></section>`}
-function market(){return `<section class="panel"><div class="eyebrow">GLOBAL AVIATION</div><h2>Wettbewerber</h2><p class="sub">Orientierungswerte für die Größenordnung; Wettbewerber sind ein statischer Marktüberblick und führen keine eigenen simulierten Flüge aus.</p><div class="tablewrap"><table><thead><tr><th>AIRLINE</th><th>LAND</th><th>FLUGZEUGE</th><th>PERSONAL</th></tr></thead><tbody>${competitors.map(c=>`<tr><td><b>${c[0]}</b></td><td>${c[1]}</td><td>${c[2]}</td><td>${c[3]}</td></tr>`).join('')}</tbody></table></div></section>`}
-function settings(){return `<section class="panel"><h2>Spielstand</h2><p class="sub">Automatische Speicherung in diesem Browser. Sichere deinen Spielstand zusätzlich als Datei.</p><div class="section"><button class="action" id="export">Spielstand exportieren</button> <label class="secondary" style="cursor:pointer">Spielstand importieren<input id="import" type="file" accept="application/json" hidden></label> <button class="secondary" id="reset">Neues Spiel</button></div><p class="footer-note">Beim Wiederöffnen werden Flüge, Lieferungen und Personalkosten anhand der Systemzeit nachgerechnet. Flüge und Verbrauch sind vereinfacht; Flugzeuge werden nach Typ verwaltet. Der alte Skyward-Spielstand bleibt getrennt im Browser gespeichert.</p></section>`}
-function render(){sync();let total=s.fleet.reduce((n,f)=>n+f.count,0);app.innerHTML=`<div class="shell"><aside class="sidebar"><div class="brand"><span class="brand-mark">✈</span> LUFTHANSA<small>GROUP MANAGER</small></div><div class="eyebrow nav-label">MANAGEMENT</div><nav class="nav">${[['dashboard','◫','Übersicht'],['routes','⌁','Streckennetz'],['fleet','✈','Flotte & Wartung'],['new','＋','Strecke planen'],['fuel','◒','Kerosin & Personal'],['market','◎','Wettbewerber'],['settings','⚙','Spielstand']].map(([id,icon,label])=>`<button data-page="${id}" class="${page===id?'active':''}">${icon} &nbsp; ${label}</button>`).join('')}</nav><div class="sidebar-foot"><span class="status-dot">●</span> AUTOMATISCH GESPEICHERT<br>Simulation läuft in Echtzeit</div></aside><main class="main"><header class="top"><div><div class="eyebrow">LUFTHANSA GROUP / OPERATIONS CENTER</div><h1>${{dashboard:'Willkommen an Bord.',routes:'Das Streckennetz',fleet:'Flotte & Wartung',new:'Neue Strecke',fuel:'Betrieb & Ressourcen',market:'Der globale Markt',settings:'Spielstand verwalten'}[page]}</h1><p class="sub">${page==='dashboard'?'Dein Überblick über die Lufthansa Group.':'Deine Entscheidungen bewegen die Gruppe.'}</p></div><div class="clock"><span class="pill">● BETRIEB LÄUFT</span><div style="margin-top:9px">${new Date().toLocaleString('de-DE',{dateStyle:'medium',timeStyle:'short'})} Ortszeit</div></div></header><div class="metrics"><div class="metric"><label>LIQUIDITÄT</label><strong>${money(s.cash)}</strong><small>Verfügbares Konzernkapital</small></div><div class="metric"><label>FLOTTE</label><strong>${num(total)}</strong><small>Lufthansa · SWISS · Austrian</small></div><div class="metric"><label>STRECKEN</label><strong>${s.routes.length}</strong><small>Modellierte Verbindungen</small></div><div class="metric"><label>MITARBEITENDE</label><strong>${num(s.staff)}</strong><small>Gesamte Lufthansa Group</small></div></div>${notice?`<div class="notice">${esc(notice)}</div>`:''}${page==='dashboard'?dashboard():page==='routes'?`<section class="panel"><div class="panel-head"><div><h2>Aktive Verbindungen</h2><p class="sub">${s.routes.length} Strecken · Zeiten entsprechen der nächsten geplanten Ankunft.</p></div><button class="action" data-page="new">+ Neue Strecke</button></div>${routeTable(s.routes)}</section>`:page==='fleet'?fleetPage():page==='new'?newRoute():page==='fuel'?fuelPage():page==='market'?market():settings()}</main></div>`;estimate()}
-app.addEventListener('click',e=>{let p=e.target.closest('[data-page]');if(p){page=p.dataset.page;notice='';render();return}let close=e.target.closest('[data-close]');if(close){let r=s.routes.find(r=>r.id===+close.dataset.close);if(confirm(`Strecke ${r.from} → ${r.to} sofort schließen?`)){s.routes=s.routes.filter(x=>x!==r);log(`${r.from} → ${r.to} geschlossen.`);save();render()}return}let m=e.target.closest('[data-maintain]');if(m){let f=s.fleet.find(f=>String(f.id)===m.dataset.maintain),cost=Math.ceil((100-f.condition)*f.count*4500);if(s.cash<cost){notice='Nicht genug Kapital für die Wartung.'}else{s.cash-=cost;f.condition=100;notice=`${types[f.type][0]} bei ${brands[f.air].name} gewartet für ${money(cost)}.`;log(notice)}save();render();return}if(e.target.id==='reset'&&confirm('Wirklich den Spielstand dieses Managers löschen und neu beginnen?')){s=base();notice='Neues Spiel gestartet.';save();render()}if(e.target.id==='export'){let a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(s,null,2)],{type:'application/json'}));a.download='lufthansa-manager-spielstand.json';a.click();URL.revokeObjectURL(a.href)}});
-app.addEventListener('change',async e=>{if(e.target.id==='filter'){filter=e.target.value;render()}if(e.target.id==='import'){try{let data=JSON.parse(await e.target.files[0].text());if(data.version!==2||!Array.isArray(data.fleet)||!Array.isArray(data.routes)||!Array.isArray(data.orders)||!Number.isFinite(data.cash)||!Number.isFinite(data.last))throw Error();if(confirm('Aktuellen Spielstand durch die Datei ersetzen?')){s=data;save();notice='Spielstand importiert.';render()}}catch{notice='Die Datei ist kein gültiger Spielstand.';render()}}estimate()});app.addEventListener('input',estimate);
-app.addEventListener('submit',e=>{e.preventDefault();let d=new FormData(e.target);if(e.target.id==='routeForm'){let r=estimate();if(!r){notice='Die Strecke konnte nicht eröffnet werden.';render();return}r.id=s.nextId++;r.next=Date.now()+r.duration;s.routes.push(r);log(`${brands[r.air].name}: ${r.from} → ${r.to} eröffnet.`);notice='Die Verbindung wurde eröffnet.';page='routes'}if(e.target.id==='orderForm'){let type=+d.get('type'),count=+d.get('count'),air=d.get('air'),cost=types[type][4]*1e6*count;if(!Number.isInteger(count)||count<1||count>20||s.cash<cost){notice='Bestellung nicht möglich: Anzahl oder Kapital prüfen.'}else{s.cash-=cost;s.orders.push({type,count,air,at:Date.now()+(120+Math.floor(Math.random()*61))*60000});notice=`${count} × ${types[type][0]} bestellt. Lieferung in 2–3 Stunden.`;log(notice)}}if(e.target.id==='fuelForm'){let liters=+d.get('liters'),cost=liters*.85;if(!Number.isFinite(liters)||liters<1000||s.cash<cost){notice='Kauf nicht möglich: Menge oder Kapital prüfen.'}else{s.cash-=cost;s.fuel+=liters;notice=`${num(liters)} Liter Kerosin gekauft für ${money(cost)}.`;log(notice)}}save();render()});render();setInterval(()=>{if(document.activeElement?.closest('form'))return;render()},30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)render()});
+/* Simulation engine. All events use persisted game timestamps, never timers. */
+let s,
+  page = "dashboard",
+  notice = "",
+  filter = "all",
+  routeSearch = "",
+  routeSort = "profit",
+  fleetSearch = "",
+  selectedRoute = null;
+let infoCache = new Map();
+const app = document.querySelector("#app");
+const localHourFormats = new Map(
+  Object.values(HUB_RULES).map((r) => [
+    r.zone,
+    new Intl.DateTimeFormat("en-GB", {
+      hour: "2-digit",
+      hourCycle: "h23",
+      timeZone: r.zone,
+    }),
+  ]),
+);
+try {
+  s = JSON.parse(localStorage.getItem(KEY)) || base();
+  if (s.version !== 2) s = base();
+} catch {
+  s = base();
+}
+initializeSimulation();
+function save() {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(s));
+  } catch {
+    notice =
+      "Speicher voll oder nicht verfügbar. Bitte den Spielstand exportieren.";
+  }
+}
+function log(text) {
+  s.log.unshift(text);
+  s.log = s.log.slice(0, 35);
+}
+function gameNow() {
+  return s.clock.sim;
+}
+function fleetTotal() {
+  return s.fleet.reduce((n, f) => n + f.count, 0);
+}
+function staffCost() {
+  return fleetTotal() * 105 * 130;
+}
+function fleetFamily(type) {
+  const name = types[type][0];
+  return /A319|A320|A321/.test(name)
+    ? "A320-Familie"
+    : name.replace(/-(100|200|300|400|600|800|900|300ER|200ER|9)$/, "");
+}
+function ownershipCost() {
+  const families = new Set(
+    s.fleet
+      .filter((f) => f.count > 0)
+      .map((f) => f.air + ":" + fleetFamily(f.type)),
+  );
+  return fleetTotal() * 3500 + families.size * 12000;
+}
+function fail(message) {
+  notice = message;
+  const node = document.querySelector("#actionFeedback");
+  if (node) {
+    node.textContent = message;
+    node.hidden = false;
+    node.scrollIntoView({ block: "nearest" });
+  }
+}
+function dayKey(t) {
+  return Math.floor(t / DAY);
+}
+function daily(t) {
+  const key = dayKey(t);
+  return (
+    s.finance.days[key] ||
+    (s.finance.days[key] = {
+      at: key * DAY,
+      revenue: 0,
+      fuel: 0,
+      operations: 0,
+      personnel: 0,
+      maintenance: 0,
+      interest: 0,
+      leasing: 0,
+      overhead: 0,
+      investment: 0,
+      disposal: 0,
+      financing: 0,
+      flights: 0,
+      missed: 0,
+      pax: 0,
+    })
+  );
+}
+function book(category, amount, text, at = s.last, routeId = null) {
+  if (!Number.isFinite(amount)) throw Error("Ungültiger Buchungsbetrag");
+  s.cash += amount;
+  daily(at)[category] = (daily(at)[category] || 0) + amount;
+  if (!["investment", "disposal", "financing"].includes(category))
+    s.profit += amount;
+  s.finance.ledger.unshift({ at, category, amount, text, routeId });
+  s.finance.ledger = s.finance.ledger.slice(0, 600);
+}
+function initializeSimulation() {
+  if (!s.market || s.market.version !== 1)
+    s.market = AirlineMarket.create(airports, km, s.last);
+  if (!s.clock) s.clock = { sim: s.last, wall: Date.now(), rate: 12 };
+  s.clock.rate = 12;
+  s.automation ||= { fuel: true, maintenance: true };
+  s.finance ||= { days: {}, ledger: [], debt: 0 };
+  s.reliability ??= 96;
+  s.completed ??= 0;
+  s.profit ??= 0;
+  s.fuelPrice ??= 0.87;
+  if (s.market.catalogVersion !== 2) {
+    const full = AirlineMarket.create(airports, km, s.last),
+      known = new Set(s.market.lanes.map((l) => l.key)),
+      added = full.lanes.filter((l) => !known.has(l.key));
+    if (s.market.companies) {
+      const budgets = s.market.companies.map(
+        (c) =>
+          c.fleet -
+          s.market.lanes.reduce(
+            (n, l) =>
+              n +
+              l.rivals
+                .filter((r) => r.id === c.id)
+                .reduce((sum, r) => sum + Math.ceil(r.capacity / 180), 0),
+            0,
+          ),
+      );
+      for (const l of added)
+        l.rivals = l.rivals.filter((r) => {
+          const required = Math.ceil(r.capacity / 180);
+          if (budgets[r.id] < required) return false;
+          budgets[r.id] -= required;
+          return true;
+        });
+    }
+    s.market.lanes.push(...added);
+    s.market.catalogVersion = 2;
+  }
+  aircraftRegistry();
+  const legacy = s.operationsVersion !== 3;
+  for (const f of s.fleet) {
+    f.maintenanceUntil ??= 0;
+    f.maintenancePending ??= false;
+    f.leased ??= [];
+    f.hours ??= 0;
+  }
+  const allocated = new Set();
+  for (const r of s.routes) {
+    r.service ||= "standard";
+    r.buffer ??= 15;
+    r.frequency ??= 0;
+    r.turnMinutes ??= turnMinutes(r.type);
+    r.legs ??= 0;
+    r.stats ||= { flights: 0, pax: 0, revenue: 0, cost: 0, missed: 0 };
+    if (!r.aircraft || r.aircraft.length !== r.count) {
+      const f = s.fleet.find((f) => f.air === r.air && f.type === r.type);
+      r.aircraft = f
+        ? f.aircraft.filter((t) => !allocated.has(t)).slice(0, r.count)
+        : [];
+    }
+    r.aircraft.forEach((t) => allocated.add(t));
+    if (legacy || !r.phase) {
+      r.phase = "ground";
+      r.next = Math.max(s.last + 60000, r.next - r.duration);
+      r.duration = blockTime(km(ap(r.from), ap(r.to)), r.type);
+    }
+  }
+  s.operationsVersion = 3;
+  AirlineMarket.economy(s.market);
+  s.market.time = s.last;
+  updateEnvironment(s.last);
+}
+function aircraftRegistry() {
+  s.aircraftSerial ||= 0;
+  for (const f of s.fleet) {
+    f.aircraft ||= [];
+    while (f.aircraft.length < f.count) {
+      s.aircraftSerial++;
+      f.aircraft.push(`${f.air}-${String(s.aircraftSerial).padStart(5, "0")}`);
+    }
+  }
+}
+function free(air, type) {
+  const f = s.fleet.find((f) => f.air === air && f.type === type);
+  return f ? aircraftAssignments(f).filter((a) => !a.route).length : 0;
+}
+function aircraftAssignments(f) {
+  return f.aircraft.map((tail) => ({
+    tail,
+    route: s.routes.find((r) => r.aircraft?.includes(tail)),
+  }));
+}
+function saleValue(f) {
+  return Math.round(
+    types[f.type][4] * 1e6 * 0.65 * (0.4 + (0.6 * f.condition) / 100),
+  );
+}
+function turnMinutes(type) {
+  return types[type][1] >= 400 ? 120 : types[type][1] >= 250 ? 90 : 45;
+}
+function cycle(r) {
+  const minimum = r.duration + (turnMinutes(r.type) + (r.buffer || 0)) * 60000;
+  return Math.max(minimum, r.frequency ? DAY / (r.frequency * 2) : 0);
+}
+function currentOrigin(r) {
+  return (r.legs || 0) % 2 ? r.to : r.from;
+}
+function currentDestination(r) {
+  return (r.legs || 0) % 2 ? r.from : r.to;
+}
+function curfewOpen(airport, at) {
+  const rule = HUB_RULES[airport];
+  if (!rule) return true;
+  const hour = Number(localHourFormats.get(rule.zone).format(at));
+  return rule.close === 0
+    ? hour >= rule.open
+    : !(hour >= rule.close || hour < rule.open);
+}
+function legalDeparture(r, at) {
+  const origin = currentOrigin(r),
+    destination = currentDestination(r);
+  let time = at;
+  for (let i = 0; i < 120; i++) {
+    if (curfewOpen(origin, time) && curfewOpen(destination, time + r.duration))
+      return time;
+    time += 15 * 60000;
+  }
+  return time;
+}
+function plannedDepartures(r) {
+  // A model week includes both endpoints' curfews instead of assuming 24/7 use.
+  const start = s.market.time,
+    until = start + 7 * DAY;
+  let at = start,
+    legs = 0,
+    count = 0;
+  while (at < until) {
+    at = legalDeparture({ ...r, legs }, at);
+    if (at >= until) break;
+    count++;
+    legs++;
+    at += cycle(r);
+  }
+  return Math.max(1 / 7, count / 7);
+}
+function updateEnvironment(at) {
+  const d = at / DAY;
+  s.fuelPrice =
+    Math.round(
+      (0.91 + 0.12 * Math.sin(d * 0.43) + 0.045 * Math.sin(d * 1.7)) * 100,
+    ) / 100;
+  const index = Math.floor(at / (6 * HOUR));
+  const affected = ["FRA", "MUC", "ZRH", "LHR", "AMS", "JFK", "CDG"][
+    hash(index) % 7
+  ];
+  s.market.weather =
+    hash(index + "weather") % 4 === 0
+      ? {
+          airport: affected,
+          minutes: 20 + (hash(index) % 30),
+          title: "Wetterbedingte Abfertigungsverzögerung",
+        }
+      : null;
+  s.market.time = at;
+  s.market.fuelPrice = s.fuelPrice;
+  s.market.playerQuality = Object.fromEntries(
+    Object.entries(brands).map(([id, b]) => [
+      id,
+      b.quality * (0.75 + s.reliability / 400),
+    ]),
+  );
+  infoCache.clear();
+}
+function info(input) {
+  const r = { service: "standard", buffer: 15, count: 1, ...input };
+  const cacheKey = JSON.stringify([
+    r.id,
+    r.from,
+    r.to,
+    r.type,
+    r.price,
+    r.count,
+    r.duration,
+    r.service,
+    r.buffer,
+    r.frequency,
+  ]);
+  if (infoCache.has(cacheKey)) return infoCache.get(cacheKey);
+  const type = types[r.type],
+    distance = km(ap(r.from), ap(r.to)),
+    hours = r.duration / HOUR;
+  const preview = !r.id;
+  r.id ??= "preview";
+  const competition = AirlineMarket.flight(
+    s.market,
+    r,
+    preview ? [...s.routes, r] : s.routes,
+    types,
+  );
+  const pax = competition.pax,
+    service = SERVICES[r.service] || SERVICES.standard;
+  const fuel = Math.ceil(type[5] * Math.max(0.35, hours - 0.2) + 450);
+  const airportFee = 850 + type[1] * 6.2,
+    handling = pax * (25 + service.cost),
+    navigation = distance + hours * 700;
+  const other = Math.round(airportFee + handling + navigation);
+  const rev = pax * r.price,
+    net = rev - other - fuel * s.fuelPrice;
+  const perDay = plannedDepartures(r),
+    allocated =
+      (staffCost() + ownershipCost()) / Math.max(1, fleetTotal()) / perDay;
+  const fullNet = net - allocated;
+  const breakEven =
+    (airportFee + navigation + fuel * s.fuelPrice + allocated) /
+    (Math.max(1, type[1]) * Math.max(0, r.price - (25 + service.cost)));
+  const result = {
+    d: distance,
+    hours,
+    pax,
+    fuel,
+    other,
+    rev,
+    net,
+    fullNet,
+    allocated,
+    competition,
+    breakEven,
+    perDay,
+    dailyNet: fullNet * perDay * r.count,
+    co2: (fuel * 0.8 * 3.16) / 1000,
+  };
+  infoCache.set(cacheKey, result);
+  return result;
+}
+function startMaintenance(f, at) {
+  if (
+    f.maintenanceUntil > at ||
+    s.routes.some(
+      (r) => r.air === f.air && r.type === f.type && r.phase === "flight",
+    )
+  )
+    return false;
+  const cost = Math.ceil((100 - f.condition) * f.count * 2200);
+  if (s.cash - cost < 100000000) return false;
+  book("maintenance", -cost, `${types[f.type][0]} · Technik-Check`, at);
+  f.maintenanceUntil = at + 4 * HOUR;
+  f.maintenancePending = false;
+  log(
+    `${brands[f.air].name}: ${types[f.type][0]} für vier Spielstunden bei der Technik.`,
+  );
+  return true;
+}
+function automaticOperations(at) {
+  for (const f of s.fleet) {
+    if (f.maintenanceUntil && f.maintenanceUntil <= at) {
+      f.condition = 100;
+      f.maintenanceUntil = 0;
+      log(`${types[f.type][0]}: Technik-Check abgeschlossen.`);
+    }
+    if (s.automation.maintenance && f.condition < 72)
+      f.maintenancePending = true;
+    if (f.maintenancePending) startMaintenance(f, at);
+  }
+  if (s.automation.fuel) {
+    const target = Math.ceil(
+      s.routes
+        .filter((r) => !r.retiring)
+        .reduce((n, r) => n + (info(r).fuel * r.count * DAY) / cycle(r), 0),
+    );
+    // Buy once stock falls below half a day; avoid hundreds of tiny purchases.
+    if (s.fuel < target * 0.5) {
+      const liters = Math.max(
+        0,
+        Math.min(
+          target - s.fuel,
+          Math.floor((s.cash - 100000000) / s.fuelPrice),
+        ),
+      );
+      if (liters > 0) {
+        book(
+          "fuel",
+          -liters * s.fuelPrice,
+          `${num(liters)} l Jet A-1 · Automatik`,
+          at,
+        );
+        s.fuel += liters;
+        s.running.fuel += liters * s.fuelPrice;
+      }
+    }
+  }
+}
+function retireRoute(r, at) {
+  s.routes = s.routes.filter((x) => x !== r);
+  log(`${r.from} ↔ ${r.to} geschlossen. Maschinen am Ausgangshub verfügbar.`);
+  infoCache.clear();
+}
+function departure(r, at) {
+  const f = s.fleet.find((f) => f.air === r.air && f.type === r.type);
+  if (r.retiring && currentOrigin(r) === r.from) {
+    retireRoute(r, at);
+    return;
+  }
+  if (f.maintenanceUntil > at || f.maintenancePending) {
+    r.phase = "maintenance";
+    r.next = f.maintenanceUntil > at ? f.maintenanceUntil : at + HOUR / 2;
+    return;
+  }
+  const legal = legalDeparture(r, at);
+  if (legal > at) {
+    r.phase = "curfew";
+    r.next = legal;
+    return;
+  }
+  const v = info(r),
+    fuel = v.fuel * r.count;
+  if (s.fuel < fuel || f.condition <= 50) {
+    r.phase = "ground";
+    r.next = at + HOUR;
+    s.running.missed += r.count;
+    r.stats.missed += r.count;
+    daily(at).missed += r.count;
+    s.reliability = Math.max(55, s.reliability - 0.025 * r.count);
+    if (!r.lastWarning || at - r.lastWarning >= 6 * HOUR) {
+      log(
+        `${r.from} ↔ ${r.to}: Start entfällt – ${s.fuel < fuel ? "Kerosin fehlt" : "Technik-Check nötig"}.`,
+      );
+      r.lastWarning = at;
+    }
+    return;
+  }
+  const weather = s.market.weather,
+    delay =
+      weather &&
+      (weather.airport === currentOrigin(r) ||
+        weather.airport === currentDestination(r))
+        ? weather.minutes * 60000
+        : 0;
+  s.fuel -= fuel;
+  book(
+    "operations",
+    -v.other * r.count,
+    `${r.air}${r.id} · Flughafen, Handling & Service`,
+    at,
+    r.id,
+  );
+  r.manifest = {
+    pax: v.pax,
+    rev: v.rev,
+    cost: v.other + v.fuel * s.fuelPrice,
+    load: v.competition.load,
+  };
+  r.phase = "flight";
+  r.departed = at;
+  r.next = at + r.duration + delay;
+  r.delay = delay;
+}
+function arrive(r, at) {
+  const f = s.fleet.find((f) => f.air === r.air && f.type === r.type),
+    manifest = r.manifest || info(r);
+  book(
+    "revenue",
+    manifest.rev * r.count,
+    `${r.air}${r.id} · ${currentOrigin(r)}–${currentDestination(r)}`,
+    at,
+    r.id,
+  );
+  r.stats.flights += r.count;
+  r.stats.pax += manifest.pax * r.count;
+  r.stats.revenue += manifest.rev * r.count;
+  r.stats.cost += manifest.cost * r.count;
+  s.completed += r.count;
+  s.running.flights += r.count;
+  daily(at).flights += r.count;
+  daily(at).pax += manifest.pax * r.count;
+  f.condition = Math.max(
+    0,
+    f.condition -
+      ((r.duration / HOUR) * 0.075 * r.count) / Math.max(1, f.count),
+  );
+  f.hours += (r.duration / HOUR) * r.count;
+  s.reliability = Math.min(
+    99.5,
+    s.reliability + (r.delay ? -0.006 : 0.004) * r.count,
+  );
+  r.legs++;
+  r.phase = "ground";
+  delete r.manifest;
+  if (r.retiring && currentOrigin(r) === r.from) {
+    retireRoute(r, at);
+    return;
+  }
+  r.next =
+    at +
+    Math.max((turnMinutes(r.type) + r.buffer) * 60000, cycle(r) - r.duration);
+}
+function syncStep(at) {
+  const elapsed = at - s.last;
+  if (elapsed <= 0) return;
+  if (elapsed) {
+    book(
+      "personnel",
+      (-staffCost() * elapsed) / DAY,
+      "Personal & Konzernstruktur",
+      at,
+    );
+    book(
+      "overhead",
+      (-ownershipCost() * elapsed) / DAY,
+      "Flottenversicherung, Infrastruktur & Mustervielfalt",
+      at,
+    );
+    if (s.finance.debt)
+      book(
+        "interest",
+        (-s.finance.debt * 0.08 * elapsed) / (365 * DAY),
+        "Kreditzins · 8 % p.a.",
+        at,
+      );
+  }
+  s.last = at;
+  automaticOperations(at);
+  for (const r of [...s.routes])
+    if (r.next <= at) {
+      if (r.phase === "flight") arrive(r, at);
+      else departure(r, at);
+    }
+  for (const order of s.orders.filter((o) => o.at <= at)) {
+    let f = s.fleet.find((f) => f.air === order.air && f.type === order.type);
+    if (f) {
+      f.condition =
+        (f.condition * f.count + (order.condition || 100) * order.count) /
+        (f.count + order.count);
+      f.count += order.count;
+    } else {
+      s.fleet.push({
+        id: s.nextId++,
+        air: order.air,
+        type: order.type,
+        count: order.count,
+        condition: order.condition || 100,
+        aircraft: [],
+        leased: [],
+        hours: 0,
+        maintenanceUntil: 0,
+        maintenancePending: false,
+      });
+    }
+    aircraftRegistry();
+    log(
+      `${order.count} × ${types[order.type][0]} an ${brands[order.air].name} ausgeliefert.`,
+    );
+  }
+  s.orders = s.orders.filter((o) => o.at > at);
+  for (const f of s.fleet) if (f.maintenancePending) startMaintenance(f, at);
+}
+function nextCheckpoint() {
+  return Math.min(
+    Math.floor(s.last / (HOUR / 2)) * (HOUR / 2) + HOUR / 2,
+    s.market.next,
+    ...s.routes.map((r) => r.next),
+    ...s.orders.map((o) => o.at),
+    ...s.fleet
+      .filter((f) => f.maintenanceUntil > s.last)
+      .map((f) => f.maintenanceUntil),
+  );
+}
+function sync() {
+  const wall = Date.now(),
+    delta = Math.max(0, wall - s.clock.wall),
+    before = s.cash;
+  s.clock.sim += delta * s.clock.rate;
+  s.clock.wall = Math.max(s.clock.wall, wall);
+  s.running = { flights: 0, missed: 0, fuel: 0, maintenance: 0 };
+  // Old imported schedules are shifted to a future event; no negative/zero loop.
+  for (const r of s.routes) if (r.next <= s.last) r.next = s.last + 60000;
+  if (s.market.next <= s.last) s.market.next = s.last + 6 * HOUR;
+  for (const o of s.orders) if (o.at <= s.last) o.at = s.last + 60000;
+  let at = nextCheckpoint();
+  while (at <= gameNow()) {
+    syncStep(at);
+    if (s.market.next <= at) {
+      AirlineMarket.advance(s.market, s.routes, types, at);
+      updateEnvironment(at);
+    }
+    at = nextCheckpoint();
+  }
+  if (delta > 5 * 60000)
+    s.report = { elapsed: delta * 12, ...s.running, net: s.cash - before };
+  const keys = Object.keys(s.finance.days)
+    .map(Number)
+    .sort((a, b) => b - a);
+  for (const key of keys.slice(90)) delete s.finance.days[key];
+  save();
+}
+function getSummary(days = 1) {
+  const end = dayKey(gameNow()),
+    start = end - days + 1,
+    totals = {
+      revenue: 0,
+      fuel: 0,
+      operations: 0,
+      personnel: 0,
+      overhead: 0,
+      maintenance: 0,
+      interest: 0,
+      flights: 0,
+      missed: 0,
+      pax: 0,
+    };
+  for (const [key, d] of Object.entries(s.finance.days))
+    if (+key >= start && +key <= end)
+      for (const k of Object.keys(totals)) totals[k] += d[k] || 0;
+  totals.net =
+    totals.revenue +
+    totals.fuel +
+    totals.operations +
+    totals.personnel +
+    totals.overhead +
+    totals.maintenance +
+    totals.interest;
+  return totals;
+}
+function routeStatus(r) {
+  const f = s.fleet.find((f) => f.air === r.air && f.type === r.type);
+  if (f.maintenanceUntil > gameNow())
+    return { label: "Technik", tone: "amber" };
+  if (r.retiring) return { label: "Rückführung", tone: "amber" };
+  return r.phase === "flight"
+    ? {
+        label: r.delay ? "Verspätet" : "Im Flug",
+        tone: r.delay ? "amber" : "green",
+      }
+    : r.phase === "curfew"
+      ? { label: "Nachtflugruhe", tone: "neutral" }
+      : r.phase === "maintenance"
+        ? { label: "Technik wartet", tone: "amber" }
+        : { label: "Am Boden", tone: "blue" };
+}
+function validateRoute(data) {
+  if (s.cash < 250000)
+    return {
+      error: "Für Station und Vertrieb sind mindestens 250.000 € nötig.",
+    };
+  const type = Number(data.get("type")),
+    count = Number(data.get("count")),
+    price = Number(data.get("price")),
+    from = data.get("from"),
+    to = data.get("to"),
+    air = data.get("air"),
+    buffer = Number(data.get("buffer") || 15),
+    frequency = Number(data.get("frequency") || 0),
+    service = data.get("service") || "standard";
+  if (!brands[air] || !types[type] || !ap(from) || !ap(to) || from === to)
+    return {
+      error: "Bitte unterschiedliche Flughäfen und ein gültiges Muster wählen.",
+    };
+  if (!brands[air].hubs.includes(from))
+    return {
+      error:
+        "Neue Strecken beginnen an einem Hub oder einer Basis dieser Airline.",
+    };
+  if (!Number.isInteger(count) || count < 1 || count > free(air, type))
+    return {
+      error: `Nicht genug freie Maschinen: ${free(air, type)} verfügbar.`,
+    };
+  if (
+    !Number.isFinite(price) ||
+    price < 30 ||
+    price > 5000 ||
+    !Number.isFinite(buffer) ||
+    buffer < 0 ||
+    buffer > 120 ||
+    ![0, 1, 2, 3, 4, 6].includes(frequency) ||
+    !SERVICES[service]
+  )
+    return {
+      error: "Preis, Umlaufziel, Bodenpuffer oder Serviceprofil prüfen.",
+    };
+  const distance = km(ap(from), ap(to));
+  if (distance > types[type][2] * 0.95)
+    return { error: "Reichweite mit 5 % Planungsreserve reicht nicht aus." };
+  if (
+    s.routes.some(
+      (r) =>
+        r.air === air &&
+        AirlineMarket.key(r.from, r.to) === AirlineMarket.key(from, to),
+    )
+  )
+    return {
+      error:
+        "Diese Airline bedient den Markt bereits. Bestehende Strecke bearbeiten.",
+    };
+  const r = {
+    type,
+    count,
+    price,
+    from,
+    to,
+    air,
+    buffer,
+    frequency,
+    service,
+    duration: blockTime(distance, type),
+    turnMinutes: turnMinutes(type),
+  };
+  if (
+    frequency &&
+    DAY / (frequency * 2) < r.duration + (r.turnMinutes + buffer) * 60000
+  )
+    return {
+      error:
+        "Dieses tägliche Umlaufziel passt nicht zu Flugzeit und Bodenzeit. Weniger Umläufe wählen.",
+    };
+  return { route: r };
+}
+function sellAircraft(tail) {
+  const f = s.fleet.find((f) => f.aircraft.includes(tail));
+  if (!f) return;
+  if (
+    aircraftAssignments(f).find((a) => a.tail === tail)?.route ||
+    f.maintenanceUntil > gameNow()
+  ) {
+    notice =
+      "Die Maschine ist gebunden. Erst Rückführung oder Wartung abschließen.";
+    return;
+  }
+  const value = saleValue(f);
+  if (!confirm(`${tail} für ${money(value)} verkaufen?`)) return;
+  f.aircraft = f.aircraft.filter((t) => t !== tail);
+  f.count--;
+  book("disposal", value, `${tail} verkauft`, gameNow());
+  log(`${tail} für ${money(value)} verkauft.`);
+  notice = "Maschine verkauft. Der Erlös ist gutgeschrieben.";
+}
+function closeRoute(r) {
+  if (r.phase === "flight" || currentOrigin(r) !== r.from) {
+    r.retiring = true;
+    notice = "Die Strecke wird nach der Rückkehr zum Ausgangshub geschlossen.";
+  } else {
+    retireRoute(r, gameNow());
+    notice = "Strecke geschlossen. Die Flugzeuge sind wieder frei.";
+  }
+  infoCache.clear();
+}
+function validSave(data) {
+  if (
+    !data ||
+    data.version !== 2 ||
+    !Number.isFinite(data.cash) ||
+    !Number.isFinite(data.last) ||
+    !Array.isArray(data.fleet) ||
+    !Array.isArray(data.routes) ||
+    !Array.isArray(data.orders)
+  )
+    return false;
+  if (
+    !data.fleet.every(
+      (f) =>
+        brands[f.air] &&
+        types[f.type] &&
+        Number.isInteger(f.count) &&
+        f.count >= 0 &&
+        f.count <= 5000 &&
+        Number.isFinite(f.condition) &&
+        f.condition >= 0 &&
+        f.condition <= 100,
+    )
+  )
+    return false;
+  if (
+    !data.routes.every(
+      (r) =>
+        brands[r.air] &&
+        types[r.type] &&
+        ap(r.from) &&
+        ap(r.to) &&
+        r.from !== r.to &&
+        Number.isInteger(r.count) &&
+        r.count > 0 &&
+        Number.isFinite(r.price) &&
+        r.price >= 30 &&
+        Number.isFinite(r.next) &&
+        Number.isFinite(r.duration) &&
+        r.duration > 0,
+    )
+  )
+    return false;
+  const groups = new Map(
+    data.fleet.map((f) => [f.air + "-" + f.type, f.count]),
+  );
+  const counts = new Map();
+  for (const r of data.routes) {
+    const key = r.air + "-" + r.type;
+    counts.set(key, (counts.get(key) || 0) + r.count);
+  }
+  if ([...counts].some(([key, count]) => count > (groups.get(key) || 0)))
+    return false;
+  if (
+    !data.orders.every(
+      (o) =>
+        brands[o.air] &&
+        types[o.type] &&
+        Number.isInteger(o.count) &&
+        o.count > 0 &&
+        Number.isFinite(o.at),
+    )
+  )
+    return false;
+  if (
+    data.clock &&
+    (!Number.isFinite(data.clock.sim) || !Number.isFinite(data.clock.wall))
+  )
+    return false;
+  if (
+    data.market &&
+    (!Array.isArray(data.market.lanes) || !Number.isFinite(data.market.next))
+  )
+    return false;
+  return true;
+}
+function exportGame() {
+  sync();
+  const a = document.createElement("a");
+  const url = URL.createObjectURL(
+    new Blob([JSON.stringify(s, null, 2)], { type: "application/json" }),
+  );
+  a.href = url;
+  a.download = "lufthansa-group-manager.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+app.addEventListener("click", (e) => {
+  const target = e.target.closest("button,a[data-page],[data-route]");
+  if (!target) return;
+  sync();
+  notice = "";
+  if (target.matches?.("a")) e.preventDefault();
+  if (target.dataset.page) {
+    page = target.dataset.page;
+    selectedRoute = null;
+    render();
+    return;
+  }
+  if (target.dataset.route) {
+    selectedRoute = Number(target.dataset.route);
+    page = "route";
+    render();
+    return;
+  }
+  if (target.dataset.sell) {
+    sellAircraft(target.dataset.sell);
+    save();
+    render();
+    return;
+  }
+  if (target.dataset.close) {
+    const r = s.routes.find((r) => r.id === Number(target.dataset.close));
+    if (r && confirm(`${r.from} ↔ ${r.to} nach Rückkehr zum Hub schließen?`))
+      closeRoute(r);
+    save();
+    render();
+    return;
+  }
+  if (target.dataset.maintain) {
+    const f = s.fleet.find((f) => f.id === Number(target.dataset.maintain));
+    if (
+      f &&
+      confirm(
+        `${types[f.type][0]}: Technik-Check für rund ${money(Math.ceil((100 - f.condition) * f.count * 2200))} und vier Spielstunden Standzeit planen?`,
+      )
+    ) {
+      f.maintenancePending = true;
+      startMaintenance(f, gameNow());
+      notice =
+        "Technik-Check geplant. Laufende Flüge landen zuerst; der Check dauert vier Spielstunden.";
+    }
+    save();
+    render();
+    return;
+  }
+  if (target.dataset.auto) {
+    const key = target.dataset.auto;
+    if (["fuel", "maintenance"].includes(key))
+      s.automation[key] = !s.automation[key];
+    save();
+    render();
+    return;
+  }
+  if (target.dataset.map) {
+    mapRegion = target.dataset.map;
+    render();
+    return;
+  }
+  if (target.id === "dismissIntro") {
+    s.introSeen = true;
+    save();
+    render();
+    return;
+  }
+  if (target.id === "dismissReport") {
+    delete s.report;
+    save();
+    render();
+    return;
+  }
+  if (target.id === "dismissIntro") {
+    s.introSeen = true;
+    save();
+    render();
+    return;
+  }
+  if (target.id === "export") {
+    exportGame();
+    return;
+  }
+  if (
+    target.id === "reset" &&
+    confirm(
+      "Neues Szenario beginnen? Der aktuelle Spielstand wird ersetzt. Vorher gegebenenfalls exportieren.",
+    )
+  ) {
+    s = base();
+    initializeSimulation();
+    infoCache.clear();
+    page = "dashboard";
+    notice = "Neues Lufthansa-Group-Szenario gestartet.";
+    save();
+    render();
+    return;
+  }
+});
+app.addEventListener("submit", (e) => {
+  e.preventDefault();
+  sync();
+  const d = new FormData(e.target);
+  notice = "";
+  if (e.target.id === "routeForm") {
+    const result = validateRoute(d);
+    if (result.error) {
+      fail(result.error);
+      return;
+    }
+    const r = result.route,
+      f = s.fleet.find((f) => f.air === r.air && f.type === r.type);
+    r.id = s.nextId++;
+    r.phase = "ground";
+    r.legs = 0;
+    r.next = gameNow() + 30 * 60000;
+    r.stats = { flights: 0, pax: 0, revenue: 0, cost: 0, missed: 0 };
+    r.aircraft = aircraftAssignments(f)
+      .filter((a) => !a.route)
+      .slice(0, r.count)
+      .map((a) => a.tail);
+    s.routes.push(r);
+    book(
+      "operations",
+      -250000,
+      `${r.from}–${r.to} · Station & Vertrieb eröffnen`,
+      gameNow(),
+      r.id,
+    );
+    infoCache.clear();
+    notice =
+      "Neue Strecke eröffnet. Boarding beginnt nach 30 Spielminuten; Nachtflugruhe wird berücksichtigt.";
+    page = "routes";
+  }
+  if (e.target.id === "routeEdit") {
+    const r = s.routes.find((r) => r.id === selectedRoute),
+      price = Number(d.get("price")),
+      buffer = Number(d.get("buffer")),
+      service = d.get("service");
+    if (
+      !r ||
+      !Number.isFinite(price) ||
+      price < 30 ||
+      price > 5000 ||
+      !Number.isFinite(buffer) ||
+      buffer < 0 ||
+      buffer > 120 ||
+      !SERVICES[service]
+    ) {
+      fail("Preis, Bodenpuffer und Serviceprofil prüfen.");
+      return;
+    }
+    r.price = price;
+    r.service = service;
+    r.buffer = buffer;
+    infoCache.clear();
+    notice =
+      "Änderungen gespeichert. Bereits gestartete Flüge behalten ihre gebuchten Erlöse und Kosten.";
+  }
+  if (e.target.id === "orderForm") {
+    const air = d.get("air"),
+      type = Number(d.get("type")),
+      count = Number(d.get("count")),
+      used = d.get("purchase") === "used";
+    if (
+      !brands[air] ||
+      !types[type] ||
+      !Number.isInteger(count) ||
+      count < 1 ||
+      count > 20
+    ) {
+      fail("Airline, Muster und Anzahl prüfen.");
+      return;
+    }
+    const cost = types[type][4] * 1e6 * count * (used ? 0.72 : 1);
+    if (s.cash - cost < 100000000) {
+      fail(
+        "Die Bestellung würde die 100-Mio.-€-Liquiditätsreserve unterschreiten.",
+      );
+      return;
+    }
+    book(
+      "investment",
+      -cost,
+      `${count} × ${types[type][0]} · ${used ? "Gebrauchtkauf" : "Neubestellung"}`,
+      gameNow(),
+    );
+    s.orders.push({
+      air,
+      type,
+      count,
+      condition: used ? 84 : 100,
+      at: gameNow() + (used ? 1 : 7 + (type % 8)) * DAY,
+    });
+    notice = `Bestellung bezahlt. Lieferung in ${used ? "einem" : 7 + (type % 8)} Spieltag${used ? "" : "en"}.`;
+  }
+  if (e.target.id === "fuelForm") {
+    const liters = Number(d.get("liters")),
+      cost = liters * s.fuelPrice;
+    if (!Number.isFinite(liters) || liters < 1000 || cost > s.cash) {
+      fail("Menge oder verfügbare Liquidität prüfen.");
+      return;
+    }
+    book("fuel", -cost, `${num(liters)} l Jet A-1 · Einkauf`, gameNow());
+    s.fuel += liters;
+    notice = "Kerosin eingekauft.";
+  }
+  if (e.target.id === "loanForm") {
+    const amount = Number(d.get("amount")) * 1e6,
+      repay = d.get("operation") === "repay";
+    if (
+      !Number.isFinite(amount) ||
+      amount <= 0 ||
+      (repay && (amount > s.finance.debt || amount > s.cash)) ||
+      (!repay && s.finance.debt + amount > 250e6)
+    ) {
+      fail(
+        "Betrag prüfen: maximal 250 Mio. € Kreditrahmen; Rückzahlung aus vorhandener Liquidität.",
+      );
+      return;
+    }
+    s.finance.debt += repay ? -amount : amount;
+    book(
+      "financing",
+      repay ? -amount : amount,
+      repay ? "Kredit zurückgezahlt" : "Kredit aufgenommen",
+      gameNow(),
+    );
+    notice = "Finanzierung verbucht.";
+  }
+  save();
+  render();
+});
+app.addEventListener("input", (e) => {
+  if (e.target.closest("#routeForm")) updateEstimate();
+  if (e.target.id === "routeSearch") {
+    routeSearch = e.target.value;
+    updateRouteList();
+  }
+  if (e.target.id === "fleetSearch") {
+    fleetSearch = e.target.value;
+    updateFleetList();
+  }
+});
+app.addEventListener("change", async (e) => {
+  if (e.target.id === "airlineFilter") {
+    filter = e.target.value;
+    render();
+    return;
+  }
+  if (e.target.id === "routeSort") {
+    routeSort = e.target.value;
+    updateRouteList();
+    return;
+  }
+  if (e.target.name === "air" && e.target.closest("#routeForm")) {
+    const select = document.querySelector('#routeForm [name="from"]');
+    select.innerHTML = brands[e.target.value].hubs
+      .map(
+        (code) => `<option value="${code}">${code} · ${ap(code)[1]}</option>`,
+      )
+      .join("");
+    const aircraftSelect = document.querySelector('#routeForm [name="type"]');
+    const available = s.fleet.filter(
+      (f) => f.air === e.target.value && free(f.air, f.type) > 0,
+    );
+    aircraftSelect.innerHTML = available.length
+      ? available
+          .map(
+            (f) =>
+              `<option value="${f.type}">${types[f.type][0]} · ${free(f.air, f.type)} frei</option>`,
+          )
+          .join("")
+      : '<option value="-1">Keine freien Maschinen – erst beschaffen</option>';
+    updateEstimate();
+  }
+  if (e.target.id === "import") {
+    try {
+      const data = JSON.parse(await e.target.files[0].text());
+      if (!validSave(data)) throw Error("Ungültiger Spielstand");
+      if (confirm("Aktuellen Spielstand durch diese Sicherung ersetzen?")) {
+        s = data;
+        initializeSimulation();
+        infoCache.clear();
+        notice = "Spielstand importiert.";
+        page = "dashboard";
+        render();
+      }
+    } catch {
+      notice = "Die Datei ist kein gültiger oder unterstützter Spielstand.";
+      render();
+    }
+  }
+});
